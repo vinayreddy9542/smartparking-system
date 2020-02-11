@@ -7,3 +7,4 @@ Parkingslots.class will work as the server
 Inservice.class, Outservice.class and Ownerservice.class will work as clients to the server which will be used to modify the parking slots.
 
 veichle.class consists of the structure of the veichle parked as well the amount collected till now.
+This system as well tells the customer how much time that he/she has to wait in order to get parking slot if the parking space is full.
