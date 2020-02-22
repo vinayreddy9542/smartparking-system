@@ -15,7 +15,7 @@ import java.time.temporal.ChronoUnit;
 class veichle {
     //initialization of varibles
     double amount_collected=0;
-    static veichleadd arr[][] = new veichleadd[2][1];
+    veichleadd arr[][] = new veichleadd[1][1];
     public String add(String veichle_num,String type_of_veichle,String owner_name,String mobile,String hours,double amount_paid){
         //get the free slots and if available add this veichle
         // return the slot number or information regarding the addition of the veichle to the space
@@ -25,24 +25,27 @@ class veichle {
         //check the availability
         String index[] = ss.split("@");
         if(index.length==2){
-            num=Integer.parseInt(index[0])+arr[0].length*Integer.parseInt(index[0]);
+            num=Integer.parseInt(index[0])*arr[0].length+Integer.parseInt(index[1]);
+            System.out.println("num 1 : "+num);
         }
         else{
             return index[0];
         }
         if(num>=0){
+            System.out.println("num 2 : "+num);
             int i = Integer.parseInt(index[0]);
             int j = Integer.parseInt(index[1]);
+            System.out.println(i+" : "+j);
             veichleadd obj = new veichleadd();
+            obj.amount_paid=amount_paid;
+            obj.in=LocalDateTime.now();
+            obj.veichle_num=veichle_num;
+            obj.hours=hours;
+            obj.type_of_veichle=type_of_veichle;
+            obj.owner_name=owner_name;
+            obj.mobile=mobile;
+            obj.slot=num;
             arr[i][j]=obj;
-            arr[i][j].slot=num;
-            arr[i][j].amount_paid=amount_paid;
-            arr[i][j].in=LocalDateTime.now();
-            arr[i][j].veichle_num=veichle_num;
-            arr[i][j].hours=hours;
-            arr[i][j].type_of_veichle=type_of_veichle;
-            arr[i][j].owner_name=owner_name;
-            arr[i][j].mobile=mobile;
             System.out.println(arr[i][j]);
             amount_collected+=amount_paid;
         }
@@ -50,15 +53,18 @@ class veichle {
     }
     public String getfirstslot(){
         String slotss="";
+        boolean found=false;
         long max_minutes=Long.MAX_VALUE;
+        long diff=Long.MAX_VALUE;
         for(int i=0;i<arr.length;i++){
             for(int j=0;j<arr[0].length;j++){
-                if(arr[i][j]==null && slotss==""){
+                if(arr[i][j]==null){
                     slotss=i+"@"+j;
                     System.out.println("Initial : "+slotss);
+                    found=true;
                     break;
                 }
-                else if(slotss!=""){
+                else if(slotss.length()==0){
                     //check for min time
                     LocalDateTime toDateTime = arr[i][j].in;
                     LocalDateTime fromDateTime = LocalDateTime.now();
@@ -67,50 +73,57 @@ class veichle {
                     long hours = tempDateTime.until( toDateTime, ChronoUnit.HOURS );
                     tempDateTime = tempDateTime.plusHours( hours );
                     long minutes = tempDateTime.until( toDateTime, ChronoUnit.MINUTES );
-                    tempDateTime = tempDateTime.plusMinutes( minutes );
                     minutes+=(hours*60);
-                    if(minutes<max_minutes){
-                        max_minutes=minutes;
+                    String tt[]=time.split(":");
+                    long min = 60*Integer.parseInt(tt[0])+Integer.parseInt(tt[1]);
+                    if(minutes>min){
+                        diff=minutes-min;
                     }
-                    String tt[]=time.split("@");
-                    long min = 60*Integer.parseInt(tt[0])+Integer.parseInt(tt[0]);
-                    if(min<=(minutes-max_minutes)){
-                        slotss+="wait for a while we clear slot "+i+arr[0].length*j;
+                    else{
+                        long timediff = min-minutes;
+                        if(max_minutes>timediff)
+                            max_minutes=timediff;
                     }
                 }
             }
+            if(found){
+                break;
+            }
         }
+        if(slotss.equals("") && diff<=0)
+            slotss="wait for a while we will clear a slot";
         if(slotss.equals(""))
-            slotss="wait for "+max_minutes+" to get a free slot";
+            slotss="wait for "+max_minutes+" minutes to get a free slot";
         return slotss;
     }
     public synchronized int getfreeslots(){
         int total=0;
-        for(int i=0;i<2;i++){
-            for(int j=0;j<10;j++){
+        for(int i=0;i<arr.length;i++){
+            for(int j=0;j<arr[0].length;j++){
                 if(arr[i][j]==null)
                     total++;
             }
         }
         return total;
     }
-    public String fetchveichle(int slot,String name){
+    public  int getallotedslots(){
+        int total=0;
+        for(int i=0;i<arr.length;i++){
+            for(int j=0;j<arr[0].length;j++){
+                if(arr[i][j]!=null)
+                    total++;
+            }
+        }
+        return total;
+    }
+    public String fetchveichle(int slot,String mobile){
         String str="";
         for(int i=0;i<arr.length;i++){
             for(int j=0;j<arr[0].length;j++){
                 if(arr[i][j]!=null){
-                    if(arr[i][j].slot==slot && arr[i][j].owner_name==name){
+                    if(arr[i][j].slot==slot && arr[i][j].mobile.equals(mobile)){
                         //get the amount and check for complete payment
                         //check for extra payment
-                        LocalDateTime in = arr[i][j].getindate();
-                        LocalDateTime out = LocalDateTime.now();
-                        double amount = getfinalamount(in,out);
-                        double diff = amount-arr[i][j].getamountpaid();
-                        if(diff>0){
-                            //collect more money
-                            amount_collected+=diff;
-                            str=diff+"@";
-                        }
                         arr[i][j]=null;
                         str+="allow the person to take veichle";
                     }
@@ -123,29 +136,6 @@ class veichle {
     }
     public double getamount(){
         return amount_collected;
-    }
-    public double getfinalamount(LocalDateTime fromDateTime,LocalDateTime toDateTime){
-        double amount = 0;
-        double cost_per_min = 0.5,cost_per_extra_min=0.7;
-        //calculate the difference of the time and calculate the final amount
-        LocalDateTime tempDateTime = LocalDateTime.from(fromDateTime);
-        long hours = tempDateTime.until( toDateTime, ChronoUnit.HOURS );
-        tempDateTime = tempDateTime.plusHours( hours );
-        long minutes = tempDateTime.until( toDateTime, ChronoUnit.MINUTES );
-        tempDateTime = tempDateTime.plusMinutes( minutes );
-        minutes+=(hours*60);
-        if(minutes>0){
-            if(minutes<31)
-                amount+=minutes*cost_per_min;
-            else{
-                amount+=(minutes-30)*cost_per_min;  
-            }
-            minutes-=30;
-        }
-        if(minutes>0){
-            amount+=minutes*cost_per_extra_min;
-        }
-        return amount;
     }
 }
 class veichleadd{
