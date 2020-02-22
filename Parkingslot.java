@@ -68,8 +68,7 @@ class Inservic extends Thread {
     public void run(){ 
         String received; 
         while (true) { 
-            try { 
-                System.out.println("Welcome IN");
+            try {
                 // receive the answer from client 
                 received = dis.readUTF(); 
                 if(received.equals("Exit")){ 
@@ -91,17 +90,6 @@ class Inservic extends Thread {
                 String mobile=details[3];
                 String time=details[4];
                 String amount=details[5];
-                /*
-                1. add the veichle and get the slot number
-                2. return the slot number
-     
-                System.out.println(vnum);
-                System.out.println(vtype);
-                System.out.println(oname);
-                System.out.println(mobile);
-                System.out.println(time);
-                System.out.println(amount);
-                */
                 //get the slot number or slot info
                 String slotnum = vh.add(vnum, vtype, oname, mobile, time,Double.parseDouble(amount));
                 System.out.println("To inservice : "+slotnum);
@@ -151,21 +139,12 @@ class Outservic extends Thread {
                 System.out.println(received);
                 String check[] = received.split("@");
                 String status = vh.fetchveichle(Integer.parseInt(check[0]), check[1]);
-                //process the status
-                String findstatus[]=status.split("@");
                 /*
                 1. Available allow ot to go and replace with null
                 2. Not available send veichle not registered
                 */
-                if(findstatus.length==1){
-                    System.out.println(findstatus[0]);
-                    dos.writeUTF("To outservice : "+findstatus[0]);
-                }
-                else{
-                    String str="Collect "+findstatus[0]+" and "+findstatus[1];
-                    System.out.println("To outservice : "+str);
-                    dos.writeUTF(str);
-                }
+                System.out.println(status);
+                dos.writeUTF("To outservice : "+status);
             }
             catch (IOException e) { 
                 e.printStackTrace(); 
@@ -217,13 +196,13 @@ class Owner extends Thread {
                 String send="";
                 //based on the input get the required param
                 switch(received){
-                    case "amount_collected":
+                    case "1":
                         send="The total amount collected is "+vh.getamount();//get the total amount collected
                         break;
-                    case "alloted_slots":
-                        send="The total alloted slots are "+(20-vh.getfreeslots());
+                    case "2":
+                        send="The total alloted slots are "+vh.getallotedslots();
                         break;
-                    case "free_slots":
+                    case "3":
                         send="The total free slots are "+vh.getfreeslots();
                         break;
                 }
