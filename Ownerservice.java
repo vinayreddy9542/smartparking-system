@@ -33,7 +33,6 @@ public class Ownerservice {
                 System.out.println("2. Slots alloted..");
                 System.out.println("3. Free slots..");
                 while (true){
-                    String send="";
                     System.out.println("Enter 'Enter' to start or Exit' to quit..");
                     String tosend = scn.nextLine();
                     dos.writeUTF(tosend);
@@ -45,20 +44,8 @@ public class Ownerservice {
                     }
                     System.out.println("Enter the service number : ");
                     int service = Integer.parseInt(scn.nextLine());
-                    switch(service){
-                        //match the int with list of services.
-                        case 1:
-                            send = "amount_collected";
-                            break;
-                        case 2:
-                            send="alloted_slots";
-                            break;
-                        case 3:
-                            send="free_slots";
-                            break;
-                    }
                     //send the send
-                    dos.writeUTF(send);
+                    dos.writeUTF(service+"");
                     String received = dis.readUTF();
                     System.out.println(received);
                 }
